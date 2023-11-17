@@ -1,5 +1,11 @@
 {
   "expo": {
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#ffffff",
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "Title"
+    },
     "name": "Mobile-n3",
     "scheme": "your-app-scheme",
     "slug": "Mobile-n3",

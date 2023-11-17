@@ -1,61 +1,66 @@
 import styled from "styled-components/native";
 
-export const Button = styled.TouchableOpacity`
-  padding: 10px;
-  border: 1px solid gray;
-  border-radius: 5px;
-  width: 100%;
-  background-color: green;
+export const Container = styled.ScrollView`
+  padding-horizontal: 20px;
 `;
-
-export const Container = styled.View`
-  height: 100%;
+export const ContainerEventos = styled.View`
+  padding-vertical: 20px;
+`;
+export const ContainerAgendamentosDia = styled.View`
+  margin-bottom: 5px;
+  border-bottom-width: 1px;
+`;
+export const ModalContainer = styled.ScrollView`
+  flex: 1;
+  padding: 20px;
+`;
+export const ModalContent = styled.View`
+  flex: 1;
   justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin: auto;
-  width: 90%;
+  margin-bottom: 20px;
 `;
-export const ContainerPoke = styled.FlatList`
-  margin-bottom: 120px;
+export const ConteinerAgendamentos = styled.Pressable`
+  flex-direction: collumn;
+  margin-bottom: 10px;
 `;
-export const ScrollContainer = styled.ScrollView`
-  width: 100%;
-  margin-top: 50px;
+export const AddEventoContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid;
+  border-radius: 10px;
+  margin-bottom: 40px;
 `;
 
-export const TextDefault = styled.Text`
+export const TextoEventos = styled.Text`
+  font-size: 24px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+`;
+export const ModalTitle = styled.Text`
   font-size: 20px;
-  color: white;
   text-align: center;
+  font-weight: bold;
+  margin-bottom: 30px;
+  margin-top: 10px;
+`;
+export const TextAgendamentosDia = styled.Text`
+  font-size: 16px;
+  border-bottom-width: 1px;
+  padding-bottom: 10px;
+`;
+export const HorarioAgendamentosDia = styled.Text`
+  font-size: 18px;
 `;
 
-export const Img = styled.Image`
-  width: 200px;
+export const IconFechar = styled.TouchableOpacity`
+  padding-vertical: 10px;
+  margin-bottom: 10px;
 `;
-
 export const Input = styled.TextInput`
-  width: 100%;
   padding: 10px;
-  border: 1px solid gray;
-  border-radius: 5px;
-`;
-
-export const ContainerOptions = styled.View`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 30px;
-`;
-
-export const Card = styled.View`
-  width: 70%;
-  margin: auto;
-  height: 300px;
-  border: 1px solid gray;
-  border-radius: 5px;
-  margin-bottom: 30px;
-  justify-content: center;
-  align-items: center;
+  margin-bottom: 10px;
+  border: 1px solid;
+  border-color: gray;
+  height: 50px;
 `;

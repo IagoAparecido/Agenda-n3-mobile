@@ -72,8 +72,14 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
 
   const API_KEY = "941f281b8d94d7ce02451d1c05edd5c5";
 
-  const formatarData = (data: Date | string) => {
-    return format(new Date(data), "dd/MM/yyyy");
+  const formatarData = (data: string) => {
+    try {
+      const [year, month, day] = data.split("-");
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error("Erro ao formatar a data:", error);
+      return "Data Inválida";
+    }
   };
 
   const getUserLocation = async () => {

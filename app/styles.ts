@@ -8,7 +8,6 @@ export const ContainerEventos = styled.View`
 `;
 export const ContainerAgendamentosDia = styled.View`
   margin-bottom: 5px;
-  border-bottom-width: 1px;
 `;
 export const ModalContainer = styled.ScrollView`
   flex: 1;
@@ -28,7 +27,7 @@ export const AddEventoContainer = styled.View`
   flex: 1;
   justify-content: center;
   padding: 10px;
-  border: 1px solid;
+  border: 1px solid #6c757d;
   border-radius: 10px;
   margin-bottom: 40px;
 `;
@@ -46,12 +45,15 @@ export const ModalTitle = styled.Text`
   margin-top: 10px;
 `;
 export const TextAgendamentosDia = styled.Text`
-  font-size: 16px;
-  border-bottom-width: 1px;
-  padding-bottom: 10px;
+  font-size: 18px;
+  color: #212529;
 `;
 export const HorarioAgendamentosDia = styled.Text`
-  font-size: 18px;
+  border-bottom-width: 1px;
+  border-color: #6c757d;
+  font-size: 14px;
+  padding-bottom: 10px;
+  color: #6c757d;
 `;
 
 export const IconFechar = styled.TouchableOpacity`
@@ -61,7 +63,8 @@ export const IconFechar = styled.TouchableOpacity`
 export const Input = styled.TextInput`
   padding: 10px;
   margin-bottom: 10px;
-  border: 1px solid;
-  border-color: gray;
+  border: 1px solid #adb5bd;
+  border-radius: 5px;
   height: 50px;
+  color: #474448;
 `;

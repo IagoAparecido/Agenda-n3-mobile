@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { isToday, parseISO, addMinutes, isBefore } from "date-fns";
+import { isToday, parseISO, addMinutes, isBefore, format } from "date-fns";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 
@@ -71,6 +71,10 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
   );
 
   const API_KEY = "941f281b8d94d7ce02451d1c05edd5c5";
+
+  const formatarData = (data: Date | string) => {
+    return format(new Date(data), "dd/MM/yyyy");
+  };
 
   const getUserLocation = async () => {
     try {
@@ -204,6 +208,7 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
       setAppointments([...appointments, editedAppointment]);
     }
 
+    setNewAppointmentDescription("");
     setShowInputs(false);
     setShowModal(false);
 
@@ -288,7 +293,6 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
           projectId: "22e09165-975e-4942-b23d-956e5b76e6cb",
         })
       ).data;
-      console.log(token);
     } else {
       alert("Must use physical device for Push Notifications");
     }
@@ -323,8 +327,6 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
     };
   }, []);
 
-  console.log(weatherData);
-
   return (
     <Container>
       <ContainerEventos>
@@ -353,12 +355,12 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
           .filter((appointment) => isToday(parseISO(appointment.date)))
           .map((appointment, index) => (
             <ContainerAgendamentosDia key={index}>
-              <HorarioAgendamentosDia>
-                {appointment.time}
-              </HorarioAgendamentosDia>
               <TextAgendamentosDia>
                 {appointment.description}
               </TextAgendamentosDia>
+              <HorarioAgendamentosDia>
+                {appointment.time}
+              </HorarioAgendamentosDia>
             </ContainerAgendamentosDia>
           ))}
 
@@ -385,17 +387,17 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
             </Text>
           </IconFechar>
           <ModalContent>
-            <ModalTitle>{selectedDate}</ModalTitle>
+            <ModalTitle>{formatarData(selectedDate)}</ModalTitle>
             {appointments
               .filter((appointment) => appointment.date === selectedDate)
               .map((appointment, index) => (
                 <ConteinerAgendamentos key={index}>
-                  <HorarioAgendamentosDia>
-                    {appointment.time}
-                  </HorarioAgendamentosDia>
                   <TextAgendamentosDia>
                     {appointment.description}
                   </TextAgendamentosDia>
+                  <HorarioAgendamentosDia>
+                    {appointment.time}
+                  </HorarioAgendamentosDia>
                   <TouchableOpacity
                     onPress={() =>
                       handleDeleteAppointment(
@@ -426,9 +428,11 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
           <AddEventoContainer>
             <TouchableOpacity
               onPress={handleShowInputs}
-              style={styles.addButton}
+              style={showInputs ? styles.cancelButton : styles.addButton}
             >
-              <Text>{showInputs ? "Cancelar" : "Adicionar Evento"}</Text>
+              <Text style={styles.textButton}>
+                {showInputs ? "Cancelar" : "Adicionar Evento"}
+              </Text>
             </TouchableOpacity>
 
             {showInputs && (
@@ -468,7 +472,7 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
                   onPress={handleAddAppointment}
                   style={styles.addButton}
                 >
-                  <Text>Salvar Evento</Text>
+                  <Text style={styles.textButton}>Salvar Evento</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -481,14 +485,29 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
 
 const styles = StyleSheet.create({
   addButton: {
-    backgroundColor: "lightblue",
+    backgroundColor: "#2d6a4f",
     padding: 10,
     textAlign: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#c32f27",
+    padding: 10,
+    textAlign: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
   },
   deleteButton: {
     padding: 10,
     position: "absolute",
     left: "90%",
+  },
+  textButton: {
+    fontWeight: "800",
+    color: "#f1f1f1",
   },
   pickerContainer: {
     flexDirection: "row",

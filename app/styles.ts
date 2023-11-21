@@ -14,6 +14,7 @@ export const ModalContainer = styled.ScrollView`
   flex: 1;
   padding: 20px;
 `;
+
 export const ModalContent = styled.View`
   flex: 1;
   justify-content: center;

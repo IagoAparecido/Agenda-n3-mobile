@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -6,12 +6,18 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Platform,
+  Button,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { isToday, parseISO } from "date-fns";
-import { AntDesign, Feather } from "@expo/vector-icons";
+import { isToday, parseISO, addMinutes, isBefore } from "date-fns";
+import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import * as Location from "expo-location";
 
 import {
   AddEventoContainer,
@@ -31,10 +37,19 @@ import {
 
 interface AgendaScreenProps {}
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 const AgendaScreen: React.FC<AgendaScreenProps> = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [weatherData, setWeatherData] = useState<any>({});
   const [newAppointmentDescription, setNewAppointmentDescription] =
     useState<string>("");
   const [markedDates, setMarkedDates] = useState<any>({});
@@ -45,8 +60,77 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
     null
   );
 
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const [notification, setNotification] =
+    useState<Notifications.Notification>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(
+    undefined
+  );
+  const responseListener = useRef<Notifications.Subscription | undefined>(
+    undefined
+  );
+
+  const API_KEY = "941f281b8d94d7ce02451d1c05edd5c5";
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.error("Permissão de localização não concedida");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      getWeatherData(latitude, longitude);
+    } catch (error) {
+      console.error("Erro ao obter localização do usuário:", error);
+    }
+  };
+
+  const getWeatherData = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+      );
+      const data = await response.json();
+      setWeatherData(data);
+    } catch (error) {
+      console.error("Erro ao obter dados meteorológicos:", error);
+    }
+  };
+
+  const getWeatherIcon = (weatherCondition: string) => {
+    switch (weatherCondition.toLowerCase()) {
+      case "clear":
+        return (
+          <MaterialCommunityIcons
+            name="weather-sunny"
+            size={30}
+            color="yellow"
+          />
+        );
+      case "clouds":
+        return (
+          <MaterialCommunityIcons
+            name="weather-cloudy"
+            size={30}
+            color="gray"
+          />
+        );
+      case "rain":
+        return (
+          <MaterialCommunityIcons name="weather-rainy" size={30} color="blue" />
+        );
+      default:
+        return <AntDesign name="question" size={30} color="black" />;
+    }
+  };
+
   useEffect(() => {
     loadAppointments();
+    getUserLocation();
   }, []);
 
   useEffect(() => {
@@ -122,6 +206,12 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
 
     setShowInputs(false);
     setShowModal(false);
+
+    scheduleNotificationBeforeEvent(
+      selectedDate,
+      `${selectedHour}:${selectedMinute}`,
+      newAppointmentDescription
+    );
   };
 
   const handleDeleteAppointment = (
@@ -149,10 +239,116 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
     setEditingAppointment(null);
   };
 
+  const scheduleNotificationBeforeEvent = async (
+    date: string,
+    time: string,
+    description: string
+  ) => {
+    const eventDateTime = new Date(`${date}T${time}`);
+    const notificationDateTime = addMinutes(eventDateTime, -5);
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Agenda",
+        body: `Lembrete! Seu agendamento: '${description}' está prestes a começar!`,
+        data: { event: { date, time, description } },
+      },
+      trigger: { date: notificationDateTime },
+    });
+  };
+
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification!");
+        return;
+      }
+      // Learn more about projectId:
+      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+      token = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId: "22e09165-975e-4942-b23d-956e5b76e6cb",
+        })
+      ).data;
+      console.log(token);
+    } else {
+      alert("Must use physical device for Push Notifications");
+    }
+
+    return token;
+  }
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token!)
+    );
+
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(
+          notificationListener.current
+        );
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
+
+  console.log(weatherData);
+
   return (
     <Container>
       <ContainerEventos>
-        <TextoEventos>Eventos do Dia</TextoEventos>
+        <View>
+          <TextoEventos>Eventos do Dia</TextoEventos>
+          <View
+            style={{
+              position: "absolute",
+              left: "70%",
+              top: 15,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            {weatherData?.main && (
+              <Text style={{ marginRight: 5, fontSize: 18 }}>
+                {weatherData.main.temp}&deg;C
+              </Text>
+            )}
+            {weatherData?.weather &&
+              getWeatherIcon(weatherData.weather[0]?.main)}
+          </View>
+        </View>
+
         {appointments
           .filter((appointment) => isToday(parseISO(appointment.date)))
           .map((appointment, index) => (
@@ -165,6 +361,14 @@ const AgendaScreen: React.FC<AgendaScreenProps> = () => {
               </TextAgendamentosDia>
             </ContainerAgendamentosDia>
           ))}
+
+        {appointments.filter((appointment) =>
+          isToday(parseISO(appointment.date))
+        ).length === 0 && (
+          <Text style={{ textAlign: "center", marginTop: 20 }}>
+            Nenhum evento agendado para hoje.
+          </Text>
+        )}
       </ContainerEventos>
 
       <Calendar
